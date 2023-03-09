@@ -7,6 +7,7 @@ export default function Document() {
       <body>
         <Main />
         <NextScript />
+        <script src="https://unpkg.com/arweave/bundles/web.bundle.js"></script>
       </body>
     </Html>
   )

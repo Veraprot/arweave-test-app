@@ -1,26 +1,11 @@
 import Bundlr from "@bundlr-network/client";
-import Arweave from 'arweave';
 import { signers } from "arbundles";
-// import { bundleAndSignData, createData, DataItem, Bundle } from "arbundles";
+import { bundleAndSignData, createData, DataItem } from "arbundles";
+import Arweave from 'arweave';
 
-  export const uploadFiles = async(files: any) => {
-    console.log(new Uint8Array(await files[0].arrayBuffer()))
-    return
-    // let itemsMap = await prepFilesForTransaction(signer)
-    // let signedBundles = await bundleTransactionItems(itemsMap, signer, bundlr)
-    // await bundlr.ready()
-  
-    // const tx = bundlr.createTransaction(signedBundles.getRaw(), {
-    //   tags: [{ name: "Bundle-Format", value: "binary" }, { name: "Bundle-Version", value: "2.0.0" }]
-    // })
-  
-    // await tx.sign()
-    // await tx.upload()
-    // let manifestId = signedBundles.items[signedBundles.items.length - 1].id
-    // return manifestId;
-  }
-  
-const upload = async (files: string[]): Promise<any> => {
+// Start point for initializing + creating signers that are later used for 
+// creating and uploading arweave transactions 
+const upload = async (ephemeral: any): Promise<any> => {
   const bundlr = new Bundlr(
     "https://devnet.bundlr.network",
     "solana",
@@ -29,20 +14,72 @@ const upload = async (files: string[]): Promise<any> => {
         providerUrl: "https://api.devnet.solana.com"
     }
   )
-
-  const arweave = Arweave.init({
-    host: 'arweave.dev',
-    port: 443,
-    protocol: 'https', 
-  });
-
-  const ephemeral = await arweave.wallets.generate();
-
-  const signer = new signers.ArweaveSigner(ephemeral);
   
-  uploadFiles(files)
+  // const signer = new ArweaveSigner(ephemeral)
+  
+  // *********************************************************************************
+  // Once we have signer, we can start testing functions for creating + uploading data w code below
+  // Ignore commentd out code for now, leaving it here just for more context of why we need to 
+  // use signer from arbundles 
+  // *********************************************************************************
+
+  // let itemsMap = await prepFilesForTransaction(signer, files)
+  // let signedBundles = await bundleAndSignData([...itemMap.values(), manifestItem], signer);
+  // await bundlr.ready()
+  
+  // const tx = bundlr.createTransaction(signedBundles.getRaw(), {
+  //   tags: [{ name: "Bundle-Format", value: "binary" }, { name: "Bundle-Version", value: "2.0.0" }]
+  // })
+
+  // await tx.sign()
+  // await tx.upload()
   return 
 }
 
+// **********************************************************************************
+// Leaving this for context as well, but you can ignore this code. 
+// **********************************************************************************
+
+// const prepFilesForTransaction = async(signer: any, files: File[]): Promise<Map<string, DataItem>> => {
+//   const items: [string, DataItem][] = await Promise.all(
+//     files.map(async (file) => {
+//       return [
+//         file.name,
+//         await prepFile(file, signer),
+//       ];
+//     })
+//   );
+
+//   return new Map(items);
+// }
+        
+// const prepFile = async(file: File, signer: any): Promise<DataItem> => {
+//   let item = createData(
+//     new Uint8Array(await file.arrayBuffer()),
+//     signer,
+//     {
+//       tags: [{ name: "Content-Type", value: "txt" }],
+//     }
+//   );
+
+//   await item.sign(signer);
+//   return item;
+// }
+                        
+// export const uploadFiles = async(bundlr: any, signer: any, files: File[]): Promise<string> => {
+//     let itemsMap = await prepFilesForTransaction(signer, files)
+//     let signedBundles = await bundleAndSignData([...itemMap.values()], signer);
+//     await bundlr.ready()
+
+//   const tx = bundlr.createTransaction(signedBundles.getRaw(), {
+//       tags: [{ name: "Bundle-Format", value: "binary" }, { name: "Bundle-Version", value: "2.0.0" }]
+//     })
+
+//   await tx.sign()
+//   await tx.upload()
+//   let manifestId = signedBundles.items[signedBundles.items.length - 1].id
+//   return manifestId;
+// }
+                                                
 export { upload };
 
