@@ -3,6 +3,7 @@ import { upload } from "../helpers/bundlr"
 import Script from 'next/script'
 import Arweave from 'arweave';
 import { signers } from "arbundles";
+import { ArweaveSigner } from "arbundles/src/signing";
 
 export default function Home(props: any) {
   const [uploadFiles, setUploadFiles] = useState<any>([])
@@ -26,7 +27,8 @@ export default function Home(props: any) {
           // this is the part that causes the SubtleCrypto error 
           // couldn't figure out different way to use arbundles library to create 
           // an arweave signer object
-          // const signer = new signers.ArweaveSigner(ephemeral);
+          const signer = new ArweaveSigner(ephemeral);
+          console.log(signer);
           setArweave(arweave)
           setEphemeral(ephemeral)
         }}
