@@ -12,6 +12,11 @@ import fileReaderStream from "filereader-stream";
 const upload = async (publicKey: any, file: File) => {
   const buffer = new ArrayBuffer(8);
 
+  const bundlr2 = new Bundlr("https://devnet.bundlr.network", "solana", "51SZY4VD77awGnMdKNUrSZnoPUYqwSzyf8CKcLe9RxSqJ5bsEMiBkRQr4y8nzX8AVbzY237puxTmRx24pmUv6G2j")
+
+  const pkey = bundlr2.getSigner()
+  console.log(pkey)
+  return 
   const provider = {
     publicKey,
     signMessage: () => {
@@ -25,9 +30,7 @@ const upload = async (publicKey: any, file: File) => {
 
   try {
     const dataStream = fileReaderStream(file);
-    const tx = await bundlr.upload(dataStream, {
-        tags: [{ name: "Content-Type", value: file.type }],
-    });
+    const tx = await bundlr.upload("dataStream");
 
     console.log(`File uploaded ==> https://arweave.net/${tx.id}`);
 
