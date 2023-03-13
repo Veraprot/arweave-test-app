@@ -1,85 +1,91 @@
 import Bundlr from "@bundlr-network/client";
-import { signers } from "arbundles";
-import { bundleAndSignData, createData, DataItem } from "arbundles";
-import Arweave from 'arweave';
+import { ArweaveSigner } from "arbundles/src/signing";
+import { bundleAndSignData, createData, DataItem} from "arbundles";
 
-// Start point for initializing + creating signers that are later used for 
-// creating and uploading arweave transactions 
-const upload = async (ephemeral: any): Promise<any> => {
-  const bundlr = new Bundlr(
-    "https://devnet.bundlr.network",
-    "solana",
-    "51SZY4VD77awGnMdKNUrSZnoPUYqwSzyf8CKcLe9RxSqJ5bsEMiBkRQr4y8nzX8AVbzY237puxTmRx24pmUv6G2j", 
-    {
-        providerUrl: "https://api.devnet.solana.com"
-    }
-  )
+// Ai3QcZMuv4qsVbgmzdjpCPSpTD5EsbB9WbHoBByqFLCX
+// 51SZY4VD77awGnMdKNUrSZnoPUYqwSzyf8CKcLe9RxSqJ5bsEMiBkRQr4y8nzX8AVbzY237puxTmRx24pmUv6G2j
+const upload = async (ephemeral: any, files: File[]): Promise<any> => {
+  console.log(process.env)
+
+  // const bundlr = new Bundlr(
+  //   "https://devnet.bundlr.network",
+  //   "solana",
+  //   process.env.KEY, 
+  //   {
+  //       providerUrl: "https://api.devnet.solana.com"
+  //   }
+  // )
   
   // const signer = new ArweaveSigner(ephemeral)
-  
-  // *********************************************************************************
-  // Once we have signer, we can start testing functions for creating + uploading data w code below
-  // Ignore commentd out code for now, leaving it here just for more context of why we need to 
-  // use signer from arbundles 
-  // *********************************************************************************
+  // uploadFiles(bundlr, signer, files)
 
-  // let itemsMap = await prepFilesForTransaction(signer, files)
-  // let signedBundles = await bundleAndSignData([...itemMap.values(), manifestItem], signer);
-  // await bundlr.ready()
-  
-  // const tx = bundlr.createTransaction(signedBundles.getRaw(), {
-  //   tags: [{ name: "Bundle-Format", value: "binary" }, { name: "Bundle-Version", value: "2.0.0" }]
-  // })
-
-  // await tx.sign()
-  // await tx.upload()
   return 
 }
 
-// **********************************************************************************
-// Leaving this for context as well, but you can ignore this code. 
-// **********************************************************************************
+const prepFiles = async(signer: any, files: File[]): Promise<Map<string, DataItem>> => {
+  const items: [string, DataItem][] = await Promise.all(
+    files.map(async (file) => {
+      return [
+        file.name,
+        await prepFile(file, signer),
+      ];
+    })
+  );
 
-// const prepFilesForTransaction = async(signer: any, files: File[]): Promise<Map<string, DataItem>> => {
-//   const items: [string, DataItem][] = await Promise.all(
-//     files.map(async (file) => {
-//       return [
-//         file.name,
-//         await prepFile(file, signer),
-//       ];
-//     })
-//   );
+  return new Map(items);
+}
 
-//   return new Map(items);
-// }
-        
-// const prepFile = async(file: File, signer: any): Promise<DataItem> => {
-//   let item = createData(
-//     new Uint8Array(await file.arrayBuffer()),
-//     signer,
-//     {
-//       tags: [{ name: "Content-Type", value: "txt" }],
-//     }
-//   );
+const prepFile = async(file: File, signer: any): Promise<DataItem> => {
+  let item = createData(
+    new Uint8Array(await file.arrayBuffer()),
+    signer,
+    {
+      tags: [{ name: "Content-Type", value: "txt" }],
+    }
+  );
 
-//   await item.sign(signer);
-//   return item;
-// }
-                        
-// export const uploadFiles = async(bundlr: any, signer: any, files: File[]): Promise<string> => {
-//     let itemsMap = await prepFilesForTransaction(signer, files)
-//     let signedBundles = await bundleAndSignData([...itemMap.values()], signer);
-//     await bundlr.ready()
+  await item.sign(signer);
+  return item;
+}
 
-//   const tx = bundlr.createTransaction(signedBundles.getRaw(), {
-//       tags: [{ name: "Bundle-Format", value: "binary" }, { name: "Bundle-Version", value: "2.0.0" }]
-//     })
+const bundleTransactionItems = async(itemMap: Map<string, DataItem>, signer: any, bundlr: any): Promise<Bundle> => {
+  const pathMap: Map<string, string> = new Map([...itemMap].map(([path, item]) => ([path, item.id])))
 
-//   await tx.sign()
-//   await tx.upload()
-//   let manifestId = signedBundles.items[signedBundles.items.length - 1].id
-//   return manifestId;
-// }
-                                                
+  let manifestItem:any = await createData(
+    (await bundlr.uploader.generateManifest({ items: pathMap })).manifest,
+    signer,
+    {
+      tags: [{ 
+        name: "Type",
+        value: "manifest"
+      }, 
+      { 
+        name: "Content-Type", 
+        value: "application/x.arweave-manifest+json" 
+      }]
+    }, 
+  ); 
+  
+  let bundle = await bundleAndSignData([...itemMap.values(), manifestItem], signer);
+  return bundle
+}
+
+export const uploadFiles = async(bundlr: any, signer: any, files: File[]) => {
+  let itemsMap = await prepFiles(signer, files)
+  let signedBundles = await bundleTransactionItems(itemsMap, signer, bundlr)
+  console.log(signedBundles)
+  await bundlr.ready()
+
+  return 
+  const tx = bundlr.createTransaction(signedBundles.getRaw(), {
+    tags: [{ name: "Bundle-Format", value: "binary" }, { name: "Bundle-Version", value: "2.0.0" }]
+  })
+
+  await tx.sign()
+  await tx.upload()
+  let manifestId = signedBundles.items[signedBundles.items.length - 1].id
+  console.log(manifestId)
+  return manifestId;
+}                                              
 export { upload };
 
